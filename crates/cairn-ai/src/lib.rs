@@ -40,6 +40,12 @@ pub mod a2a {
     pub use cairn_a2a::*;
 }
 
+/// Self-calibrating strategy engine (enable the `strategy` feature).
+#[cfg(feature = "strategy")]
+pub mod strategy {
+    pub use cairn_strategy::*;
+}
+
 /// OpenTelemetry export (enable the `otel` feature).
 #[cfg(feature = "otel")]
 pub mod otel;

@@ -300,6 +300,7 @@ dependencies = [
  "axum",
  "cairn-ai-a2a",
  "cairn-ai-mcp",
+ "cairn-ai-strategy",
  "cairn-journal-postgres",
  "cairn-models",
  "cairn-runtime",
@@ -360,6 +361,25 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "cairn-ai-strategy"
+version = "0.2.0"
+dependencies = [
+ "async-trait",
+ "axum",
+ "cairn-runtime",
+ "chrono",
+ "hex",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "uuid",
 ]
 
 [[package]]

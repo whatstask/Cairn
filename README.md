@@ -21,7 +21,8 @@ time-travel debugging.
 ```toml
 [dependencies]
 cairn = { package = "cairn-ai", version = "0.1" }
-# optional features: "postgres" (PostgresJournal), "mcp" (MCP client), "a2a" (A2A server/client)
+# optional features: "postgres" (PostgresJournal), "mcp" (MCP client), "a2a" (A2A server/client),
+#                    "strategy" (self-calibrating strategy engine)
 # latest main instead: cairn = { package = "cairn-ai", git = "https://github.com/whatstask/Cairn" }
 tokio = { version = "1", features = ["full"] }
 ```
@@ -250,6 +251,57 @@ Checked against the official A2A Python SDK in both directions: its client calli
 Cairn's client calling an agent it serves. Push notifications, gRPC and the REST binding are not
 supported yet.
 
+### Strategy engine: agents that improve their own playbooks
+
+A sales agent on a fixed playbook works until the market moves, and then quietly stops working.
+`cairn-ai-strategy` notices when that happens, finds where it broke, brings in new strategies (from
+people or from models), and adopts the ones that win on real outcomes. A model never makes the call:
+
+- **Models only propose.** Proposals are screened by deterministic rules and a novelty gate against
+  everything already tried, failures included. Any change of segment, channel or geography waits for
+  a human.
+- **Statistics decide.** Thompson sampling splits traffic under a conservative loss budget, so
+  experiments can never cost more than a set share of the incumbent's results. New strategies start
+  as small canaries and ramp up only on clean guardrail evidence. They are promoted only on
+  anytime-valid evidence, which stays valid however often you look, and are rolled back automatically
+  on complaint or bounce guardrails. An e-detector watches the incumbent for drops at a false-alarm
+  rate you set up front, and a frozen holdout measures the real lift.
+- **It calibrates itself.** It sets its maturity window from observed conversion lags, its guardrail
+  window from complaint lags and its priors by empirical Bayes. Which operators (small edits, new
+  segments, crossovers, fresh ideas) and which proposers to use comes from what actually won before.
+  Every change uses only matured outcomes, moves in bounded steps and is journaled.
+- **Every decision is replayable.** State is a fold over a hash-chained event log, so any edit to
+  the history is detected.
+
+```rust
+use cairn_strategy::{Guardrail, JsonlStore, ModelProposer, ProgramConfig, Strategy, StrategyEngine};
+
+let engine = StrategyEngine::new(Arc::new(JsonlStore::new("strategy")?));
+engine.create_program("outbound", ProgramConfig {
+    goal: "book meetings with fintech CFOs".into(),
+    success_event: "meeting_booked".into(),
+    guardrails: vec![Guardrail { event: "spam_complaint".into(), max_rate: 0.003 }],
+    ..Default::default()
+}, Strategy::new("current", playbook)).await?;
+
+let a = engine.assign("outbound", "prospect-42").await?;       // follow a.strategy.playbook
+engine.report("outbound", &a.assignment_id, "meeting_booked", None).await?;
+engine.tick("outbound").await?;                                  // hourly: calibrate, detect, decide
+engine.generate("outbound", &ModelProposer::new(model), 2).await?; // when proposals are requested
+```
+
+Agents in other frameworks use it over the network. `StrategyServer` serves an MCP endpoint, so
+Microsoft Agent Framework, AWS Bedrock AgentCore Gateway, Azure AI Foundry, Google ADK, the OpenAI
+Agents SDK, LangGraph and the Claude Agent SDK can all connect to it as a remote MCP server. It also
+serves a JSON API with an OpenAPI document, and OpenFeature remote evaluation for feature-flag SDKs.
+Agent tokens can assign, report and propose; approvals and the kill switch need an admin token.
+
+Before going live, `health_check` replays a team's daily history. It shows when the last drop began
+and when it would have been flagged, which outcome moved (deliverability, replies or meetings), and
+whether the volume is high enough for testing to pay off. `cargo run --release -p cairn-ai-strategy
+--example simulate` runs the engine against a synthetic market with a mid-run shift and harmful
+proposals, and reports its gain over keeping the original strategy.
+
 ### Evals by replay
 
 ```rust
@@ -295,6 +347,7 @@ in-memory journal.
 | `cairn-ai-mcp` | MCP client (stdio + Streamable HTTP): any MCP server's tools as Cairn tools |
 | `cairn-server` | HTTP API, crash-recovery worker and Dev UI for hosting agents |
 | `cairn-ai-a2a` | Agent2Agent (A2A 1.0): serve Cairn agents to any A2A client; remote A2A agents as tools |
+| `cairn-ai-strategy` | Self-calibrating strategy engine: bandits, drift detection, guardrails, approvals; MCP/HTTP/OpenFeature server |
 | `cairn-ai-cli` | `cairn show` / `cairn state` / `cairn ui` journal tools |
 
 ## Roadmap
@@ -312,12 +365,14 @@ Done in 0.1:
 - Connectors: Azure OpenAI (keys or Entra ID), Amazon Bedrock (SigV4, streaming), native Gemini and Vertex AI
 - Context engine (journaled compaction, tool-result trimming) and long-term memory (tools, auto-recall, Postgres)
 - A2A 1.0 server and client; multi-turn runs (`continue_run`) and run cancellation
+- Strategy engine: self-calibrating playbook optimization with guardrails, approvals and an MCP server
 
 Next:
 
 - [ ] Gateway spend shared across replicas (Postgres-backed)
 - [ ] Parallel execution of read-only tools; tool retries
 - [ ] Per-agent credential brokering for MCP (OAuth)
+- [ ] Strategy engine: PostgreSQL store, snapshots for long-lived programs, CRM and sender connectors
 
 ## Contributing
 

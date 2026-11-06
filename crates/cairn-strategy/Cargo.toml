@@ -1,0 +1,38 @@
+[package]
+name = "cairn-ai-strategy"
+description = "Self-calibrating strategy engine for Cairn: detects when an agent's playbook stops working, proposes challengers, and adopts winners with statistics, guardrails and human approval."
+version.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "cairn_strategy"
+
+[dependencies]
+cairn-runtime.workspace = true
+async-trait.workspace = true
+axum = { workspace = true, optional = true }
+chrono.workspace = true
+hex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+
+[features]
+default = ["server"]
+# HTTP API, MCP endpoint and OpenAPI document (axum).
+server = ["dep:axum"]
+
+[dev-dependencies]
+axum.workspace = true
+reqwest.workspace = true

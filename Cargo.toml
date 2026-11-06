@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/cairn-runtime", "crates/cairn-models", "crates/cairn-ai", "crates/cairn-cli", "crates/cairn-gateway", "crates/cairn-journal-postgres", "crates/cairn-mcp", "crates/cairn-server", "crates/cairn-a2a"]
+members = ["crates/cairn-runtime", "crates/cairn-models", "crates/cairn-ai", "crates/cairn-cli", "crates/cairn-gateway", "crates/cairn-journal-postgres", "crates/cairn-mcp", "crates/cairn-server", "crates/cairn-a2a", "crates/cairn-strategy"]
 
 [workspace.package]
 version = "0.2.0"
@@ -22,6 +22,7 @@ cairn-journal-postgres = { path = "crates/cairn-journal-postgres", version = "0.
 cairn-ai-mcp = { path = "crates/cairn-mcp", version = "0.2.0" }
 cairn-server = { path = "crates/cairn-server", version = "0.2.0" }
 cairn-ai-a2a = { path = "crates/cairn-a2a", version = "0.2.0" }
+cairn-ai-strategy = { path = "crates/cairn-strategy", version = "0.2.0" }
 
 async-trait = "0.1"
 axum = "0.8"
@@ -47,3 +48,8 @@ tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "1", features = ["v7"] }
+
+# The strategy engine's tests run month-long market simulations; debug code
+# is too slow for them.
+[profile.dev.package.cairn-ai-strategy]
+opt-level = 3
