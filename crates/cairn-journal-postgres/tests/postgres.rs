@@ -164,14 +164,16 @@ async fn racing_resumers_cannot_corrupt_a_run() {
 async fn expired_lease_is_taken_over_using_the_database_clock() {
     let j = require_db!();
     let run = new_run_id();
-    let ttl = std::time::Duration::from_millis(200);
+    // Long enough that a slow CI runner cannot let it lapse between the
+    // first calls, short enough to keep the test quick.
+    let ttl = std::time::Duration::from_secs(2);
     assert!(j.acquire_lease(&run, "crashed", ttl).await.unwrap().is_ok());
     let held = j.acquire_lease(&run, "b", ttl).await.unwrap().unwrap_err();
     assert_eq!(held.owner, "crashed");
     assert!(j.renew_lease(&run, "crashed", ttl).await.unwrap());
     assert!(!j.renew_lease(&run, "b", ttl).await.unwrap(), "only the holder can renew");
 
-    tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+    tokio::time::sleep(ttl + std::time::Duration::from_millis(300)).await;
     assert!(j.acquire_lease(&run, "b", ttl).await.unwrap().is_ok(), "expired lease is taken over");
     assert!(!j.renew_lease(&run, "crashed", ttl).await.unwrap(), "the old holder has lost it");
     j.release_lease(&run, "b").await.unwrap();
