@@ -1,6 +1,6 @@
 //! AWS Signature Version 4, just enough for JSON POSTs to AWS APIs.
 
-use hmac::{Hmac, Mac};
+use hmac::{Hmac, KeyInit, Mac};
 use sha2::{Digest, Sha256};
 
 type HmacSha256 = Hmac<Sha256>;
