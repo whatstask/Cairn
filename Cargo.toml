@@ -11,7 +11,7 @@ keywords = ["ai", "agents", "llm", "durable-execution", "mcp"]
 categories = ["asynchronous", "development-tools", "web-programming"]
 edition = "2024"
 license = "Apache-2.0"
-rust-version = "1.85"
+rust-version = "1.87"
 
 [workspace.dependencies]
 cairn-runtime = { path = "crates/cairn-runtime", version = "0.2.0" }

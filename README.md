@@ -4,7 +4,7 @@
 [![crates.io](https://img.shields.io/crates/v/cairn-ai.svg?cacheSeconds=3600)](https://crates.io/crates/cairn-ai)
 [![docs.rs](https://img.shields.io/docsrs/cairn-ai)](https://docs.rs/cairn-ai)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![MSRV 1.85](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org)
+[![MSRV 1.87](https://img.shields.io/badge/rust-1.87%2B-orange.svg)](https://www.rust-lang.org)
 
 Durable, governed, model-agnostic AI agents, written in Rust.
 
@@ -26,7 +26,7 @@ cairn = { package = "cairn-ai", version = "0.1" }
 tokio = { version = "1", features = ["full"] }
 ```
 
-Requires Rust 1.85+. The gateway and CLI are binaries in this repo
+Requires Rust 1.87+. The gateway and CLI are binaries in this repo
 (`cargo install cairn-gateway cairn-ai-cli`). API docs: [docs.rs/cairn-ai](https://docs.rs/cairn-ai).
 
 ## Use it from any framework today: the gateway
