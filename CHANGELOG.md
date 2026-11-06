@@ -38,6 +38,17 @@ All notable changes to Cairn are documented here. The format follows
   agent (agent card, `SendMessage`, `SendStreamingMessage`, `GetTask`, `ListTasks`, `CancelTask`,
   `SubscribeToTask`, bearer-key auth); `A2aClient` calls any A2A agent; `A2aTool` makes a remote A2A
   agent a tool. Checked against the official A2A Python SDK in both directions.
+- `cairn-ai-strategy` (feature `strategy`): a self-calibrating strategy engine. Programs assign
+  strategies per subject (Thompson sampling under a conservative loss budget, a persistent holdout and
+  logged propensities). Canaries ramp up progressively; promotion uses anytime-valid evidence; guardrail
+  breaches roll back automatically; an e-detector watches for drift and its alarms carry a per-outcome
+  diagnosis. Proposals from people or models are screened against rules and a novelty gate, and scope
+  changes need a human. The maturity window, guardrail window, priors, operator mix and trust in
+  proposers' predictions calibrate themselves in bounded, journaled steps. All of it lives in a
+  hash-chained event log with JSONL and in-memory stores. `StrategyServer` serves MCP, a JSON API
+  (with OpenAPI) and OpenFeature remote evaluation, with agent and admin tokens. `health_check`
+  replays history to find drops and judge whether testing is feasible, and `sim` provides a synthetic
+  market for testing configurations.
 - Multi-turn runs: `Agent::continue_run` / `continue_message` add a follow-up message to a finished
   run (`UserMessage` event); the run's budget covers every turn.
 - `Agent::cancel` stops a run that is not being driven (`RunCanceled` event, `Status::Canceled`).
