@@ -6,7 +6,7 @@ Thanks for helping. Bug reports, fixes, docs and new adapters are all welcome.
 
 ```bash
 git clone https://github.com/whatstask/Cairn && cd Cairn
-cargo test --workspace --all-features        # Rust 1.85+
+cargo test --workspace --all-features        # Rust 1.87+
 cargo run --example support_agent            # offline demo, no API keys needed
 ```
 

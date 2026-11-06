@@ -7,6 +7,8 @@ All notable changes to Cairn are documented here. The format follows
 ## [Unreleased] — 0.2.0
 
 ### Changed
+- Minimum supported Rust version is now 1.87 (was 1.85), required by the patched `ctutils`
+  (RUSTSEC-2026-0385) that comes with hmac 0.13 and sha2 0.11.
 - `Status` has a new `Canceled` variant and `AgentError` a new `NotFinished` variant; exhaustive
   matches on either need a new arm.
 - `gemini:` model specs now use the native Gemini API instead of its OpenAI-compatible endpoint,
