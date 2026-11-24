@@ -112,9 +112,10 @@ async fn process_and_disk_limits_hold() {
 
     let forks = sandbox.exec("for i in $(seq 1 64); do sleep 2 & done; wait", T, 4096).await.unwrap();
     assert!(!forks.stderr.is_empty(), "expected fork failures past the process limit");
-    let (code, _, err) = sh(&sandbox, "head -c 20000000 /dev/zero > big").await;
-    assert_ne!(code, Some(0));
-    assert!(err.contains("No space left"), "{err}");
+    let (code, _, _) = sh(&sandbox, "head -c 20000000 /dev/zero > big").await;
+    assert_ne!(code, Some(0), "writing past the workspace cap must fail");
+    let written: u64 = sh(&sandbox, "wc -c < big").await.1.parse().unwrap();
+    assert!(written <= 8 * 1024 * 1024, "wrote {written} bytes into an 8 MiB workspace");
     sandbox.close().await.unwrap();
 }
 
