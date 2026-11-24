@@ -212,6 +212,32 @@ from MCP annotations (`readOnlyHint` → Read, `destructiveHint: false` → Writ
 which requires approval by default). Credentials stay in the client; every call carries Cairn's
 idempotency key in `_meta`.
 
+### Sandboxed code execution
+
+Give an agent a private, isolated machine to write and run code in. Each run gets its own container
+and the model works in it through `bash`, `read_file`, `write_file` and `edit_file`:
+
+```rust
+// features = ["sandbox"]
+use cairn::sandbox::{DockerProvider, SandboxOptions, SandboxTools};
+
+let sandboxes = SandboxTools::new(DockerProvider::new("python:3.12-slim"), SandboxOptions::default());
+let agent = Agent::builder("analyst").model(model).tools(sandboxes.tools()).build()?;
+
+sandboxes.sandbox(&run_id).await?.write_file("data.csv", &csv).await?;   // inputs in
+agent.run_with_id(&run_id, "Chart revenue by month from data.csv").await?;
+let report = sandboxes.sandbox(&run_id).await?.read_file("report.md", 1 << 20).await?;   // results out
+sandboxes.close(&run_id).await?;
+```
+
+Containers have no network by default, a read-only root filesystem, every Linux capability dropped,
+`no-new-privileges`, memory, CPU and process limits, and size-capped in-memory writable space.
+Commands run as an unprivileged user. A timeout kills every process the command started and keeps the
+files. Each container removes itself after its lifetime cap (one hour by default), even if your process
+crashed. A resumed run reattaches to its sandbox while it is alive. Works with Docker or Podman; add
+gVisor (`.runtime("runsc")`) for untrusted code in production. `bash` is `Write` while the network is
+off and `Irreversible` (approval required by default) when it is on.
+
 ### A2A: talk to agents from any framework
 
 Serve a Cairn agent over the [Agent2Agent protocol](https://a2a-protocol.org) (1.0, JSON-RPC
@@ -294,6 +320,7 @@ in-memory journal.
 | `cairn-journal-postgres` | PostgreSQL journal and memory: many processes/machines can drive, approve and resume the same runs |
 | `cairn-ai-mcp` | MCP client (stdio + Streamable HTTP): any MCP server's tools as Cairn tools |
 | `cairn-server` | HTTP API, crash-recovery worker and Dev UI for hosting agents |
+| `cairn-ai-sandbox` | Isolated code execution: a hardened container per run, with bash and file tools |
 | `cairn-ai-a2a` | Agent2Agent (A2A 1.0): serve Cairn agents to any A2A client; remote A2A agents as tools |
 | `cairn-ai-cli` | `cairn show` / `cairn state` / `cairn ui` journal tools |
 
@@ -312,12 +339,14 @@ Done in 0.1:
 - Connectors: Azure OpenAI (keys or Entra ID), Amazon Bedrock (SigV4, streaming), native Gemini and Vertex AI
 - Context engine (journaled compaction, tool-result trimming) and long-term memory (tools, auto-recall, Postgres)
 - A2A 1.0 server and client; multi-turn runs (`continue_run`) and run cancellation
+- Sandboxed code execution: a hardened container per run with bash and file tools
 
 Next:
 
 - [ ] Gateway spend shared across replicas (Postgres-backed)
 - [ ] Parallel execution of read-only tools; tool retries
 - [ ] Per-agent credential brokering for MCP (OAuth)
+- [ ] Sandbox egress allowlist, and secrets injected at the network boundary instead of the sandbox
 
 ## Contributing
 

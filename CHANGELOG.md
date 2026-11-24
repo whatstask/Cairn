@@ -15,6 +15,11 @@ All notable changes to Cairn are documented here. The format follows
   so thought signatures survive multi-step tool use. `OpenAiCompatModel::gemini` remains available.
 
 ### Added
+- `cairn-ai-sandbox` (`sandbox` feature): isolated code execution. Each run gets a hardened container
+  (no network by default, read-only root, no capabilities, resource limits, unprivileged user) and the
+  model gets `bash`, `read_file`, `write_file` and `edit_file`. Timeouts kill every process a command
+  started; containers remove themselves after a lifetime cap; resumed runs reattach. Docker or Podman,
+  with optional gVisor.
 - Durable workflows (`Workflow`, `WorkflowCtx`): journaled `step` and `agent` calls, resume after
   crashes and approvals, workflow-wide USD budgets that cap each child agent.
 - Multi-agent orchestration: `sequential`, `concurrent`, `handoff` and `group_chat` (round-robin

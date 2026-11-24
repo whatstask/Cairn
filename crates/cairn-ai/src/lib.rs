@@ -40,6 +40,12 @@ pub mod a2a {
     pub use cairn_a2a::*;
 }
 
+/// Isolated code execution: a hardened container per run (enable the `sandbox` feature).
+#[cfg(feature = "sandbox")]
+pub mod sandbox {
+    pub use cairn_sandbox::*;
+}
+
 /// OpenTelemetry export (enable the `otel` feature).
 #[cfg(feature = "otel")]
 pub mod otel;
