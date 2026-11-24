@@ -498,13 +498,14 @@ async fn cli(cli_name: &str, args: &[&str], timeout: Duration) -> Result<std::pr
 
 /// Whether CLI output says the container does not exist or has stopped.
 fn is_missing(stderr: &str) -> bool {
-    let s = stderr.trim_start();
-    (s.starts_with("Error response from daemon:") || s.starts_with("Error:"))
-        && (s.contains("No such container")
-            || s.contains("No such object")
-            || s.contains("is not running")
-            || s.contains("no container with name or ID")
-            || s.contains("no such container"))
+    // CLIs word this differently across versions ("Error response from
+    // daemon: No such container", "error: no such object", Podman's "Error:
+    // no container with name or ID"), so match loosely but only on CLI errors.
+    let s = stderr.trim_start().to_ascii_lowercase();
+    s.starts_with("error")
+        && ["no such container", "no such object", "is not running", "no container with name or id"]
+            .iter()
+            .any(|m| s.contains(m))
 }
 
 #[cfg(test)]
@@ -560,6 +561,7 @@ mod tests {
         assert!(is_missing("Error response from daemon: No such container: x"));
         assert!(is_missing("Error response from daemon: container abc is not running"));
         assert!(is_missing("Error: no container with name or ID \"x\" found"));
+        assert!(is_missing("error: no such object: cairn-sbx-1"), "Docker CLI 28+ wording");
         assert!(!is_missing("No such container"), "a command's own output is not a CLI error");
         assert!(!is_missing("Error response from daemon: pull access denied"));
     }
