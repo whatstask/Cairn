@@ -300,6 +300,7 @@ dependencies = [
  "axum",
  "cairn-ai-a2a",
  "cairn-ai-mcp",
+ "cairn-ai-sandbox",
  "cairn-journal-postgres",
  "cairn-models",
  "cairn-runtime",
@@ -357,6 +358,22 @@ dependencies = [
  "futures",
  "reqwest 0.12.28",
  "serde_json",
+ "thiserror",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "cairn-ai-sandbox"
+version = "0.2.0"
+dependencies = [
+ "async-trait",
+ "cairn-runtime",
+ "hex",
+ "schemars",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
  "thiserror",
  "tokio",
  "tracing",
